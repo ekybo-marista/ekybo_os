@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps, ComponentType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MotionProps } from "framer-motion";
+import Image from "next/image";
 import Sidebar from "./components/Sidebar";
 import TopBar from "./components/TopBar";
 import HologramModel from "./components/HologramModel";
@@ -713,7 +714,7 @@ function ProfileView() {
 
 function CvView() {
   const [bootStep, setBootStep] = useState(0);
-  const [profileImageStatus, setProfileImageStatus] = useState<"scanning" | "verified" | "missing">("scanning");
+  const [profileImageStatus, setProfileImageStatus] = useState<"scanning" | "verified">("scanning");
 
   useEffect(() => {
     if (bootStep >= cvBootLines.length) {
@@ -766,33 +767,23 @@ function CvView() {
                     <div className="cv-panel-heading">[ IDENTITY_PROFILE ]</div>
                     <div className="cv-profile-image-block" aria-label="Profile image">
                   <div className="cv-panel-heading">[ PROFILE_IMAGE ]</div>
-                  <div className="cv-profile-image-frame">
-                    {profileImageStatus !== "missing" && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src="/profile/avatar/profile.jpg"
-                        alt="ERIC ALEJANDRO GONZALEZ MEDINA"
-                        onLoad={() => setProfileImageStatus("verified")}
-                        onError={() => setProfileImageStatus("missing")}
-                      />
-                    )}
-                    {profileImageStatus === "missing" && (
-                      <div className="cv-profile-image-placeholder">
-                        <div>[ NO_PROFILE_IMAGE ]</div>
-                        <div>USER_IMAGE_NOT_FOUND</div>
-                        <div>SILHOUETTE_PLACEHOLDER</div>
-                      </div>
-                    )}
+                  <div className="cv-profile-image-frame" style={{ position: "relative" }}>
+                    <Image
+                      src="/profile/profile.jpg"
+                      alt="ERIC ALEJANDRO GONZALEZ MEDINA"
+                      fill
+                      sizes="(max-width: 768px) 200px, 220px"
+                      style={{
+                        objectFit: "cover",
+                        objectPosition: "center",
+                        filter: "grayscale(100%) contrast(1.15)",
+                      }}
+                      onLoad={() => setProfileImageStatus("verified")}
+                    />
                   </div>
                   <div className="cv-profile-image-scan">
                     <div>SCANNING PROFILE IMAGE...</div>
                     {profileImageStatus === "verified" && <div>IMAGE VERIFIED</div>}
-                    {profileImageStatus === "missing" && (
-                      <>
-                        <div>IMAGE NOT FOUND</div>
-                        <div>LOAD PLACEHOLDER</div>
-                      </>
-                    )}
                   </div>
                 </div>
                 <div className="cv-identity-name">ERIC ALEJANDRO GONZALEZ MEDINA</div>
