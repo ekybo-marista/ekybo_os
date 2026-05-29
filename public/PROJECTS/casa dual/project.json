@@ -1,0 +1,22 @@
+{
+  "id": "casa-habitacion",
+  "code": "PRJ_01",
+  "name": "CASA_HABITACION",
+  "type": "RESIDENCIAL",
+  "year": 2026,
+  "status": "INDEXED",
+  "location": "MERIDA_MX",
+  "concept": {
+    "title": "Estudio Residencial",
+    "text": "Un proyecto residencial indexado desde las carpetas de archivos activas para revisión visual rápida de renders, planos, secciones y plantas.",
+    "keywords": ["Arquitectura", "Residencial", "Planos", "Visualización"]
+  },
+  "siteData": {
+    "location": "MERIDA_MX",
+    "coordinates": "20.9674_N / 89.5926_W",
+    "siteArea": "TBD",
+    "urbanContext": "TEJIDO RESIDENCIAL",
+    "accessibility": "ACCESO LOCAL",
+    "landUse": "RESIDENCIAL"
+  }
+}

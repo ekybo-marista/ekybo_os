@@ -1,0 +1,22 @@
+{
+  "id": "torre-departamentos",
+  "code": "PRJ_03",
+  "name": "TORRE_DEPARTAMENTOS",
+  "type": "MULTIFAMILIAR",
+  "year": 2026,
+  "status": "INDEXED",
+  "location": "MERIDA_MX",
+  "concept": {
+    "title": "Estudio de Vivienda Vertical",
+    "text": "Un proyecto multifamiliar indexado desde los renders y planos disponibles para revisión visual dentro de la base de datos de proyectos.",
+    "keywords": ["Arquitectura", "Vivienda", "Renders", "Planos"]
+  },
+  "siteData": {
+    "location": "MERIDA_MX",
+    "coordinates": "20.9674_N / 89.5926_W",
+    "siteArea": "TBD",
+    "urbanContext": "CONTEXTO URBANO RESIDENCIAL",
+    "accessibility": "ACCESO VIAL / NÚCLEO DE SERVICIO",
+    "landUse": "RESIDENCIAL / MULTIFAMILIAR"
+  }
+}

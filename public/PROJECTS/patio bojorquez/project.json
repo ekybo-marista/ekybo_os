@@ -1,0 +1,22 @@
+{
+  "id": "sub-centro-urbano",
+  "code": "PRJ_02",
+  "name": "SUB_CENTRO_URBANO",
+  "type": "DISEÑO_URBANO",
+  "year": 2026,
+  "status": "FEATURED",
+  "location": "MERIDA_MX",
+  "concept": {
+    "title": "Marco de Conectividad Urbana",
+    "text": "Un proyecto cívico y urbano estructurado a través de espacio público, paisaje, movilidad y programas comunitarios cotidianos.",
+    "keywords": ["Diseño Urbano", "Espacio Público", "Conectividad", "Paisaje"]
+  },
+  "siteData": {
+    "location": "MERIDA_MX",
+    "coordinates": "20.9674_N / 89.5926_W",
+    "siteArea": "TBD",
+    "urbanContext": "TEJIDO URBANO MIXTO / INFRAESTRUCTURA PÚBLICA",
+    "accessibility": "AVENIDA PRINCIPAL / CONEXIONES PEATONALES / ACCESO DE SERVICIO",
+    "landUse": "PÚBLICO / RECREATIVO / CÍVICO"
+  }
+}
