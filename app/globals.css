@@ -2763,3 +2763,303 @@ a {
     min-height: 320px;
   }
 }
+
+/* Responsive hardening: tablet and mobile only. Desktop >= 1024px is untouched. */
+@media (max-width: 1023px) {
+  html,
+  body,
+  .arch-root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .project-panel,
+  .profile-terminal-panel,
+  .profile-media-panel,
+  .profile-metadata-panel,
+  .cv-panel,
+  .contact-panel {
+    min-width: 0;
+  }
+
+  .project-record,
+  .project-section-link,
+  .project-meta-stack,
+  .project-assets,
+  .profile-terminal-text,
+  .profile-metadata-value,
+  .cv-panel,
+  .contact-panel {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 641px) {
+  .top-bar-status span:nth-child(n + 5) {
+    display: none;
+  }
+
+  .project-index {
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .project-database {
+    grid-column: 1;
+    grid-row: 1;
+    overflow: hidden;
+  }
+
+  .project-records {
+    max-height: 100%;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .project-viewer {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .project-metadata {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: stretch;
+  }
+
+  .project-meta-stack,
+  .project-assets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 5px;
+  }
+
+  .profile-frame {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  .profile-terminal-panel {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .profile-media-panel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .profile-media-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-metadata-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .profile-metadata-stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    overflow: visible;
+  }
+
+  .cv-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, auto);
+    align-content: start;
+  }
+
+  .cv-panel {
+    overflow: auto;
+  }
+
+  .contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .home-shell,
+  .project-shell,
+  .profile-shell,
+  .cv-shell,
+  .contact-shell {
+    padding: 100px 16px 18px;
+  }
+
+  .side-rail-nav {
+    scrollbar-width: thin;
+  }
+
+  .side-link:hover,
+  .side-link-active {
+    transform: none;
+  }
+
+  .home-hero {
+    display: flex;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    padding: min(58vh, 420px) 12px 12px;
+  }
+
+  .home-render,
+  .home-render-shade {
+    top: 0;
+    bottom: auto;
+    height: min(58vh, 420px);
+  }
+
+  .home-panel,
+  .home-panel-studio,
+  .home-panel-project {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 10px;
+  }
+
+  .home-command {
+    position: relative;
+    inset: auto;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  .project-index {
+    width: 100%;
+    overflow: visible;
+  }
+
+  .project-database,
+  .project-viewer,
+  .project-metadata {
+    flex: 0 0 auto;
+  }
+
+  .project-records {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .project-section-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 0;
+    overflow: visible;
+  }
+
+  .project-viewer {
+    display: flex;
+    min-height: 280px;
+    height: auto;
+    flex-direction: column;
+    aspect-ratio: auto;
+    overflow: hidden;
+  }
+
+  .project-viewer-visual,
+  .project-viewer-technical-visual,
+  .project-viewer-site-data-visual {
+    position: relative;
+    inset: auto;
+    flex: 1 1 auto;
+    min-height: 280px;
+    background-color: #000;
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
+
+  .project-viewer-technical,
+  .project-viewer-standby {
+    min-height: 360px;
+  }
+
+  .project-viewer-3d,
+  .project-viewer .hologram-viewer-wrapper {
+    min-height: 320px;
+  }
+
+  .project-viewer-footer,
+  .project-viewer-technical .project-viewer-footer {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    margin: 8px;
+  }
+
+  .viewer-controls {
+    justify-content: flex-start;
+  }
+
+  .project-viewer-bubble {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    max-width: none;
+    margin: 8px;
+  }
+
+  .project-concept-bubble p {
+    display: block;
+    max-width: none;
+    overflow: visible;
+    -webkit-line-clamp: initial;
+  }
+
+  .project-technical-image,
+  .project-site-data-image,
+  .project-pdf-viewer {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .profile-media-stack {
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  }
+
+  .profile-metadata-stack,
+  .cv-grid,
+  .contact-grid {
+    width: 100%;
+  }
+
+  .cv-panel,
+  .contact-panel {
+    overflow: visible;
+  }
+
+  .cv-skill-track {
+    width: 100%;
+  }
+
+  .contact-info-row {
+    display: grid;
+    grid-template-columns: minmax(86px, auto) minmax(0, 1fr);
+  }
+
+  .contact-info-value,
+  .contact-channel-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
