@@ -278,13 +278,14 @@ export default function AppClient({
     setView(nextView);
     // update URL query params to reflect navigation
     const params = new URLSearchParams(window.location.search);
-    params.set("view", nextView);
+    const viewParam = nextView === "studio" ? "profile" : nextView;
+    params.set("view", viewParam);
     // clear project/section when leaving projects view
-    if (nextView !== "projects") {
+    if (viewParam !== "projects") {
       params.delete("project");
       params.delete("section");
     }
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
     window.history.replaceState(null, "", newUrl);
   }, []);
 
@@ -292,17 +293,21 @@ export default function AppClient({
 
   function updateUrlForState(viewName: View, project?: Project, section?: ProjectSection | null) {
     const params = new URLSearchParams();
-    params.set("view", viewName);
+    const viewParam = viewName === "studio" ? "profile" : viewName;
+    params.set("view", viewParam);
 
-    if (project) {
-      params.set("project", slugifyProjectName(project.name));
+    // Only include project/section when view is projects
+    if (viewParam === "projects") {
+      if (project) {
+        params.set("project", slugifyProjectName(project.name));
+      }
+
+      if (section) {
+        params.set("section", idToSectionParam[section]);
+      }
     }
 
-    if (section) {
-      params.set("section", idToSectionParam[section]);
-    }
-
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
     window.history.replaceState(null, "", newUrl);
   }
 
