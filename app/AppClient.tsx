@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentProps, ComponentType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MotionProps } from "framer-motion";
@@ -29,6 +29,34 @@ const projectSections: Array<{ id: ProjectSection; label: string }> = [
   { id: "model3d", label: "MODELS_3D" },
   { id: "siteData", label: "SITE_DATA" },
 ];
+
+// Mapping between URL-friendly section slugs and internal section ids
+const sectionParamToId: Record<string, ProjectSection> = {
+  concept: "concept",
+  renders: "renders",
+  drawings: "drawings",
+  sections: "sections",
+  plans: "plans",
+  models_3d: "model3d",
+  site_data: "siteData",
+};
+
+const idToSectionParam: Record<ProjectSection, string> = {
+  concept: "concept",
+  renders: "renders",
+  drawings: "drawings",
+  sections: "sections",
+  plans: "plans",
+  model3d: "models_3d",
+  siteData: "site_data",
+};
+
+function slugifyProjectName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
 function getProjectSectionOptions(project: Project) {
   return projectSections.filter((section) => {
@@ -248,8 +276,35 @@ export default function AppClient({
 
   const navigate = useCallback((nextView: Exclude<View, "project_view">) => {
     setView(nextView);
-    window.history.replaceState(null, "", `#${nextView}`);
+    // update URL query params to reflect navigation
+    const params = new URLSearchParams(window.location.search);
+    params.set("view", nextView);
+    // clear project/section when leaving projects view
+    if (nextView !== "projects") {
+      params.delete("project");
+      params.delete("section");
+    }
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", newUrl);
   }, []);
+
+  const isApplyingDeepLink = useRef(false);
+
+  function updateUrlForState(viewName: View, project?: Project, section?: ProjectSection | null) {
+    const params = new URLSearchParams();
+    params.set("view", viewName);
+
+    if (project) {
+      params.set("project", slugifyProjectName(project.name));
+    }
+
+    if (section) {
+      params.set("section", idToSectionParam[section]);
+    }
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", newUrl);
+  }
 
   const accessProjectIndex = useCallback(() => {
     navigate("projects");
@@ -277,6 +332,89 @@ export default function AppClient({
     updateViewerState(project.id, { ...currentState, section: null });
   }, [expandedProjectId, updateViewerState, viewerStates]);
 
+  // After boot screen disappears, process deep link query params
+  useEffect(() => {
+    let cancelled = false;
+
+    const tryApplyDeepLink = () => {
+      const search = window.location.search;
+      if (!search) return;
+
+      const params = new URLSearchParams(search);
+      const viewParam = params.get("view");
+
+      if (viewParam !== "projects") return;
+
+      const projectParam = params.get("project");
+      const sectionParam = params.get("section");
+
+      // find project by slug
+      const projectBySlug = projectParam
+        ? projects.find((p) => slugifyProjectName(p.name) === projectParam)
+        : null;
+
+      let targetProject = projectBySlug ?? projects[0];
+
+      // If requested project exists but has no available sections, fallback to first project that has sections
+      const hasSections = (p: Project) => getProjectSectionOptions(p).length > 0;
+
+      if (projectBySlug && !hasSections(projectBySlug)) {
+        const alt = projects.find((p) => hasSections(p));
+        if (alt) targetProject = alt;
+      }
+
+      // determine section id
+      let targetSection: ProjectSection | null = null;
+      if (sectionParam) {
+        const mapped = sectionParam in sectionParamToId ? sectionParamToId[sectionParam as string] : undefined;
+        if (mapped && getProjectSectionOptions(targetProject).map((s) => s.id).includes(mapped)) {
+          targetSection = mapped;
+        }
+      }
+
+      // if no section provided or not available, pick first available
+      const available = getProjectSectionOptions(targetProject).map((s) => s.id);
+      if (!targetSection && available.length > 0) {
+        targetSection = available[0];
+      }
+
+      // apply deep link: show boot first (boot is global), then navigate after boot ends
+      isApplyingDeepLink.current = true;
+      setView("projects");
+      setActiveProject(targetProject);
+      setExpandedProjectId(targetProject.id);
+
+      setViewerStates((current) => ({
+        ...current,
+        [targetProject.id]: normalizeViewerState({ ...current[targetProject.id], section: targetSection }, targetProject),
+      }));
+
+      // finally update URL to reflect canonical slug/section
+      updateUrlForState("projects", targetProject, targetSection);
+    };
+
+    // wait for boot-screen removal by polling DOM (BootScreen removes itself after ~7s)
+    const interval = window.setInterval(() => {
+      const bootEl = document.querySelector(".boot-screen");
+      if (!bootEl) {
+        window.clearInterval(interval);
+        if (!cancelled) tryApplyDeepLink();
+      }
+    }, 200);
+
+    const timeout = window.setTimeout(() => {
+      // timeout fallback after 8s
+      window.clearInterval(interval);
+      if (!cancelled) tryApplyDeepLink();
+    }, 8000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [projects, setViewerStates]);
+
   useEffect(() => {
     const currentState = viewerStates[activeProject.id] ?? createViewerState();
     const availableSections = getProjectSectionOptions(activeProject).map((section) => section.id);
@@ -293,6 +431,21 @@ export default function AppClient({
       }
     }
   }, [activeProject, viewerStates, updateViewerState]);
+
+  // Keep URL in sync when user navigates manually (ignore while applying deep link)
+  useEffect(() => {
+    if (isApplyingDeepLink.current) {
+      // allow one render to settle then stop ignoring
+      const t = window.setTimeout(() => {
+        isApplyingDeepLink.current = false;
+      }, 250);
+
+      return () => window.clearTimeout(t);
+    }
+
+    const currentViewer = viewerStates[activeProject.id] ?? createViewerState();
+    updateUrlForState(view, activeProject, currentViewer.section);
+  }, [view, activeProject, viewerStates]);
 
   return (
     <>
