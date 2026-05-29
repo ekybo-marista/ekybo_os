@@ -290,6 +290,18 @@ export default function AppClient({
   }, []);
 
   const isApplyingDeepLink = useRef(false);
+  const initialParamsRef = useRef<{ view: string | null; project: string | null; section: string | null } | null>(null);
+  const initialParamsApplied = useRef(false);
+
+  // Read initial search params once on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    initialParamsRef.current = {
+      view: params.get("view"),
+      project: params.get("project"),
+      section: params.get("section"),
+    };
+  }, []);
 
   function updateUrlForState(viewName: View, project?: Project, section?: ProjectSection | null) {
     const params = new URLSearchParams();
@@ -337,65 +349,88 @@ export default function AppClient({
     updateViewerState(project.id, { ...currentState, section: null });
   }, [expandedProjectId, updateViewerState, viewerStates]);
 
-  // After boot screen disappears, process deep link query params
+  // After boot screen disappears, apply initial params captured at mount
   useEffect(() => {
     let cancelled = false;
 
-    const tryApplyDeepLink = () => {
-      const search = window.location.search;
-      if (!search) return;
+    const applyInitialParams = () => {
+      if (initialParamsApplied.current) return;
+      initialParamsApplied.current = true;
 
-      const params = new URLSearchParams(search);
-      const viewParam = params.get("view");
+      const initial = initialParamsRef.current;
+      const viewParam = initial?.view ?? null;
+      const projectParam = initial?.project ?? null;
+      const sectionParam = initial?.section ?? null;
 
-      if (viewParam !== "projects") return;
-
-      const projectParam = params.get("project");
-      const sectionParam = params.get("section");
-
-      // find project by slug
-      const projectBySlug = projectParam
-        ? projects.find((p) => slugifyProjectName(p.name) === projectParam)
-        : null;
-
-      let targetProject = projectBySlug ?? projects[0];
-
-      // If requested project exists but has no available sections, fallback to first project that has sections
       const hasSections = (p: Project) => getProjectSectionOptions(p).length > 0;
 
-      if (projectBySlug && !hasSections(projectBySlug)) {
-        const alt = projects.find((p) => hasSections(p));
-        if (alt) targetProject = alt;
-      }
+      if (viewParam === "projects") {
+        // find project by slug
+        const projectBySlug = projectParam
+          ? projects.find((p) => slugifyProjectName(p.name) === projectParam)
+          : null;
 
-      // determine section id
-      let targetSection: ProjectSection | null = null;
-      if (sectionParam) {
-        const mapped = sectionParam in sectionParamToId ? sectionParamToId[sectionParam as string] : undefined;
-        if (mapped && getProjectSectionOptions(targetProject).map((s) => s.id).includes(mapped)) {
-          targetSection = mapped;
+        let targetProject = projectBySlug ?? projects[0];
+
+        // If requested project exists but has no available sections, fallback to first project that has sections
+        if (projectBySlug && !hasSections(projectBySlug)) {
+          const alt = projects.find((p) => hasSections(p));
+          if (alt) targetProject = alt;
         }
+
+        // determine section id per rules: prefer requested, else concept, else first available
+        let targetSection: ProjectSection | null = null;
+        if (sectionParam) {
+          const mapped = sectionParam in sectionParamToId ? sectionParamToId[sectionParam as string] : undefined;
+          if (mapped && getProjectSectionOptions(targetProject).map((s) => s.id).includes(mapped)) {
+            targetSection = mapped;
+          }
+        }
+
+        if (!targetSection) {
+          const options = getProjectSectionOptions(targetProject).map((s) => s.id);
+          if (options.includes("concept")) targetSection = "concept" as ProjectSection;
+          else targetSection = options[0] ?? null;
+        }
+
+        // apply
+        isApplyingDeepLink.current = true;
+        setView("projects");
+        setActiveProject(targetProject);
+        setExpandedProjectId(targetProject.id);
+
+        setViewerStates((current) => ({
+          ...current,
+          [targetProject.id]: normalizeViewerState({ ...current[targetProject.id], section: targetSection }, targetProject),
+        }));
+
+        updateUrlForState("projects", targetProject, targetSection);
+        isApplyingDeepLink.current = false;
+        return;
       }
 
-      // if no section provided or not available, pick first available
-      const available = getProjectSectionOptions(targetProject).map((s) => s.id);
-      if (!targetSection && available.length > 0) {
-        targetSection = available[0];
+      // map studio/profile
+      if (viewParam === "studio" || viewParam === "profile") {
+        setView("studio");
+        updateUrlForState("studio");
+        return;
       }
 
-      // apply deep link: show boot first (boot is global), then navigate after boot ends
-      isApplyingDeepLink.current = true;
-      setView("projects");
-      setActiveProject(targetProject);
-      setExpandedProjectId(targetProject.id);
+      if (viewParam === "cv") {
+        setView("cv");
+        updateUrlForState("cv");
+        return;
+      }
 
-      setViewerStates((current) => ({
-        ...current,
-        [targetProject.id]: normalizeViewerState({ ...current[targetProject.id], section: targetSection }, targetProject),
-      }));
+      if (viewParam === "contact") {
+        setView("contact");
+        updateUrlForState("contact");
+        return;
+      }
 
-      // finally update URL to reflect canonical slug/section
-      updateUrlForState("projects", targetProject, targetSection);
+      // default to home and clear project/section
+      setView("home");
+      updateUrlForState("home");
     };
 
     // wait for boot-screen removal by polling DOM (BootScreen removes itself after ~7s)
@@ -403,14 +438,14 @@ export default function AppClient({
       const bootEl = document.querySelector(".boot-screen");
       if (!bootEl) {
         window.clearInterval(interval);
-        if (!cancelled) tryApplyDeepLink();
+        if (!cancelled) applyInitialParams();
       }
     }, 200);
 
     const timeout = window.setTimeout(() => {
       // timeout fallback after 8s
       window.clearInterval(interval);
-      if (!cancelled) tryApplyDeepLink();
+      if (!cancelled) applyInitialParams();
     }, 8000);
 
     return () => {
@@ -439,6 +474,10 @@ export default function AppClient({
 
   // Keep URL in sync when user navigates manually (ignore while applying deep link)
   useEffect(() => {
+    if (!initialParamsApplied.current) {
+      return;
+    }
+
     if (isApplyingDeepLink.current) {
       // allow one render to settle then stop ignoring
       const t = window.setTimeout(() => {
